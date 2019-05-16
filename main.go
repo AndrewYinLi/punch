@@ -73,8 +73,7 @@ func punch(){
 		currentTime := timeDateSplit[1]
 		currentDate :=  timeDateSplit[0] // Use today's date as key
 		hoursWorked := logBucket.Get([]byte(currentDate)) // Value from bucket is hours worked
-		fmt.Println(hoursWorked)
-		if(hoursWorked == nil) { // Punch in because no time has been logged for today
+		if hoursWorked == nil || len(hoursWorked) == 0 { // Punch in because no time has been logged for today
 			err := logBucket.Put([]byte(currentDate), []byte(currentTime))
 			if err != nil {
 				log.Fatal(err)
