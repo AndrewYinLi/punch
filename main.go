@@ -2,13 +2,35 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/kyokomi/emoji"
 	bolt "go.etcd.io/bbolt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
-	"os"
 )
+
+// Wrapper for print because we need to format in emojis!
+func Print(input string, fg string){
+	switch fg { // Get foreground color
+		case "red":
+			color.Set(color.FgRed)
+		case "green":
+			color.Set(color.FgGreen)
+		case "yellow":
+			color.Set(color.FgYellow)
+		case "blue":
+			color.Set(color.FgBlue)
+		case "magenta":
+			color.Set(color.FgMagenta)
+		case "cyan":
+			color.Set(color.FgCyan)
+	}
+	fmt.Println(emoji.Sprint(input))
+	color.Set(color.FgWhite) // Reset to white
+}
 
 // Convert 24-hour time to 12-hour time
 func convertTime(international string) string{
@@ -78,7 +100,7 @@ func punch(){
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Print("Punched in at " + convertTime(currentTime) + ".\n")
+			Print("Punched:punch: in at " + convertTime(currentTime) + ".", "green")
 		} else{ // Punch out because time in was previously logged
 			hoursWorked := logBucket.Get([]byte(currentDate))
 			hoursWorkedSplit := strings.Split(string(hoursWorked), ",")
@@ -96,9 +118,9 @@ func punch(){
 				outTime = convertTime(hoursWorkedSplit[1])
 				timeWorked = hoursWorkedSplit[2]
 			}
-			fmt.Print("Punched in at " + inTime + ".\n")
-			fmt.Print("Punched out at " + outTime +  ".\n")
-			fmt.Print("Time worked today: " + timeWorked +  ".\n")
+			Print("Punched:punch: in at " + inTime + ".", "green")
+			Print("Punched:punch: out at " + outTime +  ".", "red")
+			Print("Time worked today:hourglass:: " + timeWorked +  ".", "magenta")
 		}
 		return nil
 	})
@@ -147,13 +169,15 @@ func main() {
 		}
 	} else if os.Args[1] == "reset"{
 		reset()
-		fmt.Println("In and out times have been reset for today!")
+		Print("Punch:punch: in and punch:punch: out times have been reset:recycle: for today!", "cyan")
 	} else if os.Args[1] == "help"{
-		fmt.Println("Usage:")
-		fmt.Println("Punch in with `punch` and out with `punch` again")
-		fmt.Println("Set your in time with `punch in <hh:mm>`.")
-		fmt.Println("Set your out time with `punch out <hh:mm>`.")
-		fmt.Println("Reset your times for the day with `punch reset`.")
+		Print("","")
+		Print("Usage:information_source::","blue")
+		Print("Punch:punch: in with `punch` and punch:punch: out by calling `punch` again.", "yellow")
+		Print("Also call `punch` after punching:punch: out for the day to see hours worked:chart_with_upwards_trend:.", "magenta")
+		Print("Set your in time with `punch in <hh:mm>`.", "green")
+		Print("Set your out time with `punch out <hh:mm>`.", "red")
+		Print("Reset:recycle: your times for the day with `punch reset`.", "cyan")
 	}
 
 }
