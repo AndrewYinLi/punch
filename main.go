@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func convertTime (international string) string{
+func convertTime(international string) string{
 	internationalSplit := strings.Split(international, ":")
 	hour, _ := strconv.Atoi(internationalSplit[0])
 	if hour > 12{
@@ -19,18 +19,19 @@ func convertTime (international string) string{
 	}
 }
 
-func calcTimeWorked (in string, out string) string{
+func calcTimeWorked(in string, out string) string{
+	// Edge case example: in and out are the same
+	if in == out {
+		return "0 hours & 0 minutes"
+	}
 	inSplit := strings.Split(in, ":")
 	outSplit := strings.Split(out, ":")
 	inHour, _ := strconv.Atoi(inSplit[0])
 	outHour, _ := strconv.Atoi(outSplit[0])
 	hoursWorked := outHour - inHour
-	inMinute, _ := strconv.Atoi(inSplit[1])
-	outMinute, _ := strconv.Atoi(outSplit[1])
-	// Edge case example: in and out are the same
-	if outHour - inHour == 0 && outMinute - inMinute == 0 {
-		return "0 hours & 0 minutes"
-	}
+	// There's also " AM" or " PM" following the minutes so we use the slice operator
+	inMinute, _ := strconv.Atoi(inSplit[1][0:2])
+	outMinute, _ := strconv.Atoi(outSplit[1][0:2])
 	var minutesWorked int
 	// Edge case example = 6:27pm - 5:45 = 0:42
 	if outMinute > inMinute {
@@ -39,7 +40,15 @@ func calcTimeWorked (in string, out string) string{
 		hoursWorked--
 		minutesWorked = 60 - inMinute + outMinute
 	}
-	return strconv.Itoa(hoursWorked) + " hours & " + strconv.Itoa(minutesWorked) + " minutes."
+	return strconv.Itoa(hoursWorked) + " hours & " + strconv.Itoa(minutesWorked) + " minutes"
+}
+
+func multiAppend(slices [][]byte) []byte{
+	var temp []byte
+	for _, slice := range slices { // foreach (I'm a Go noob)
+		temp = append(append(temp, slice...), []byte(",")...)
+	}
+	return temp[:len(temp)-1] // Remove trailing ","
 }
 
 // Record time in
@@ -62,7 +71,7 @@ func punch(){
 		currentDate :=  timeDateSplit[0] // Use today's date as key
 		hoursWorked := logBucket.Get([]byte(currentDate)) // Value from bucket is hours worked
 		if(hoursWorked == nil) { // Punch in because no time has been logged for today
-			err := logBucket.Put([]byte(currentDate), append([]byte(currentTime), []byte(",")...))
+			err := logBucket.Put([]byte(currentDate), []byte(currentTime))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -70,18 +79,22 @@ func punch(){
 		} else{ // Punch out because time in was previously logged
 			hoursWorked := logBucket.Get([]byte(currentDate))
 			hoursWorkedSplit := strings.Split(string(hoursWorked), ",")
-			if hoursWorkedSplit[1] == "" {
-				hoursWorkedSplit[1] = currentTime
-				err := logBucket.Put([]byte(currentDate), append([]byte(hoursWorked), []byte(currentTime)...))
+			inTime := convertTime(hoursWorkedSplit[0])
+			var outTime string
+			var timeWorked string
+			if len(hoursWorkedSplit) == 1 { // If user hasn't punched out yet
+				outTime = convertTime(currentTime)
+				timeWorked = calcTimeWorked(inTime, outTime)
+				err := logBucket.Put([]byte(currentDate), multiAppend([][]byte{hoursWorked, []byte(currentTime), []byte(timeWorked)}))
 				if err != nil {
 					log.Fatal(err)
 				}
+			} else{ // If user has already punched out
+				outTime = convertTime(hoursWorkedSplit[1])
+				timeWorked = hoursWorkedSplit[2]
 			}
-			inTime := convertTime(hoursWorkedSplit[0])
-			outTime := convertTime(hoursWorkedSplit[1])
 			fmt.Print("Punched in at " + inTime + ".\n")
 			fmt.Print("Punched out at " + outTime +  ".\n")
-			timeWorked := calcTimeWorked(inTime, outTime)
 			fmt.Print("Time worked today: " + timeWorked +  ".\n")
 		}
 
