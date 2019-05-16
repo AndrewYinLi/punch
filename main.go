@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os"
 )
 
+// Convert 24-hour time to 12-hour time
 func convertTime(international string) string{
 	internationalSplit := strings.Split(international, ":")
 	hour, _ := strconv.Atoi(internationalSplit[0])
@@ -43,6 +45,7 @@ func calcTimeWorked(in string, out string) string{
 	return strconv.Itoa(hoursWorked) + " hours & " + strconv.Itoa(minutesWorked) + " minutes"
 }
 
+// Append multiple byte slices into one byte slice
 func multiAppend(slices [][]byte) []byte{
 	var temp []byte
 	for _, slice := range slices { // foreach (I'm a Go noob)
@@ -51,7 +54,7 @@ func multiAppend(slices [][]byte) []byte{
 	return temp[:len(temp)-1] // Remove trailing ","
 }
 
-// Record time in
+// Record time in or out
 func punch(){
 	// Open `hours.db` in cd. Creates the database if it doesn't exist.
 	db, err := bolt.Open("hours.db", 0600, nil)
@@ -70,6 +73,7 @@ func punch(){
 		currentTime := timeDateSplit[1]
 		currentDate :=  timeDateSplit[0] // Use today's date as key
 		hoursWorked := logBucket.Get([]byte(currentDate)) // Value from bucket is hours worked
+		fmt.Println(hoursWorked)
 		if(hoursWorked == nil) { // Punch in because no time has been logged for today
 			err := logBucket.Put([]byte(currentDate), []byte(currentTime))
 			if err != nil {
@@ -97,14 +101,60 @@ func punch(){
 			fmt.Print("Punched out at " + outTime +  ".\n")
 			fmt.Print("Time worked today: " + timeWorked +  ".\n")
 		}
-
 		return nil
 	})
 	if err != nil {
 		log.Fatal("Error: Could not log hours in database.")
 	}
 }
+
+func reset(){
+	db, err := bolt.Open("hours.db", 0600, nil) // Open db
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	err = db.Update(func(tx *bolt.Tx) error {
+		logBucket := tx.Bucket([]byte("log")) // Get bucket with logged times
+		if logBucket == nil{
+			return nil
+		}
+		// Get date and reformat
+		timeDate := time.Now().Format("2006-01-02 15:04")
+		currentDate := []byte(strings.Split(timeDate, " ")[0])
+		// Use reformatted date as key in bucket
+		hoursWorked := logBucket.Get(currentDate)
+		if hoursWorked == nil{
+			return nil
+		}
+		err := logBucket.Put(currentDate, nil) // Clear times
+		if err != nil {
+			log.Fatal(err)
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal("Error: Could not log hours in database.")
+	}
+}
+
 func main() {
-	punch()
+	// Should probably reformat with an arg parser library
+	if len(os.Args) == 1{
+		punch()
+	} else if os.Args[1] == "in" || os.Args[1] == "out"{
+		if len(os.Args) != 2{
+			log.Fatal("Error: Incorrect number of arguments. Usage: `punch " + os.Args[1] + " <hh:mm>`.")
+		}
+	} else if os.Args[1] == "reset"{
+		reset()
+		fmt.Println("In and out times have been reset for today!")
+	} else if os.Args[1] == "help"{
+		fmt.Println("Usage:")
+		fmt.Println("Punch in with `punch` and out with `punch` again")
+		fmt.Println("Set your in time with `punch in <hh:mm>`.")
+		fmt.Println("Set your out time with `punch out <hh:mm>`.")
+		fmt.Println("Reset your times for the day with `punch reset`.")
+	}
 
 }
