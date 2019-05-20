@@ -146,14 +146,12 @@ func export(){
 		if logBucket == nil{
 			return nil
 		}
-
 		// Create output file
 		fo, err := os.Create("hours.csv")
 		if err != nil {
 			return err
 		}
 		defer fo.Close()
-
 		// Iterate over all logged times and write to file
 		if err := logBucket.ForEach(func(k, v []byte) error {
 			fmt.Fprintf(fo, string(multiAppend([][]byte{k, v})) + "\n")
@@ -162,7 +160,6 @@ func export(){
 		err != nil {
 			return err
 		}
-
 		return nil
 	})
 	if err != nil {
