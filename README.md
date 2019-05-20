@@ -2,7 +2,7 @@
 
 ### punch👊 in and out from the command line to keep track of your hours worked with ease!
 
-### Real-life footage of you punching out for the day:
+### Real-life footage of you punching👊 out for the day:
 ![im a weab](onepunch.jpg)
 
 ### Installation👊
