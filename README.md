@@ -2,6 +2,9 @@
 
 ### punch👊 in and out from the command line to keep track of your hours worked with ease!
 
+### Real-life footage of you punching out for the day:
+![im a weab](onepunch.jpg)
+
 ### Installation👊
 To start using `punch`, install Go and run `go get`:
 ```sh
