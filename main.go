@@ -10,7 +10,20 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"path"
 )
+
+// getDatabasePath joins the path for `hours.db` according to OS
+// the path is the same as where the src code for punch.go is stored
+func getDatabasePath() string{
+	databasePath := os.Getenv("GOPATH") // Init to GOPATH
+	dirSlice := []string{"src", "github.com", "AndrewYinLi", "punch"} // Path to `hours.db` file
+	for _,dir := range dirSlice{
+		databasePath = path.Join(databasePath, dir)
+	}
+	databasePath = path.Join(databasePath, "hours.db")
+	return databasePath
+}
 
 // Print is a wrapper for nested function calls to print string input
 // with the correct color designated by string fg
@@ -83,8 +96,8 @@ func multiAppend(slices [][]byte) []byte{
 
 // punch records today's time in or time out if time in has already been recorded
 func punch(){
-	// Open `hours.db` in cd. Creates the database if it doesn't exist.
-	db, err := bolt.Open("hours.db", 0600, nil)
+	// Open `hours.db` designated path. Creates the database if it doesn't exist.
+	db, err := bolt.Open(getDatabasePath(), 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,7 +149,7 @@ func punch(){
 
 // export writes all logged dates, times in and out, and hours worked to "hours.csv"
 func export(){
-	db, err := bolt.Open("hours.db", 0600, nil) // Open db
+	db, err := bolt.Open(getDatabasePath(), 0600, nil) // Open db
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -165,11 +178,12 @@ func export(){
 	if err != nil {
 		log.Fatal("Error: Could not export hours.")
 	}
+	Print("Exported 'hours.csv' to the current directory.", "white")
 }
 
 // reset deletes the times recorded for in and out only for today
 func reset(){
-	db, err := bolt.Open("hours.db", 0600, nil) // Open db
+	db, err := bolt.Open(getDatabasePath(), 0600, nil) // Open db
 	if err != nil {
 		log.Fatal(err)
 	}

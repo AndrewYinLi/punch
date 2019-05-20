@@ -18,6 +18,3 @@ $ go get github.com/AndrewYinLi/punch
 * Set your in time with `punch in <hh:mm>`.
 * Set your out time with `punch out <hh:mm>`.
 * Reset your times for the day with `punch reset`.
-
-### To-do👊
-Create the `.db` and `.csv` files in a static location
