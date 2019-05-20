@@ -2,7 +2,7 @@
 
 ### punch👊 in and out from the command line to keep track of your hours worked with ease!
 
-### Candid pic of you punching👊 out for the day (I'm secretly a weaboo uwu):
+### Me when I punch👊 out for the day (I'm secretly a weaboo uwu):
 ![im a weab](onepunch.jpg)
 
 ### Installation👊
