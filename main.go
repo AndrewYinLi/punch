@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-// Wrapper for print because we need to format in emojis!
+// Print is a wrapper for nested function calls to print string input
+// with the correct color designated by string fg
 func Print(input string, fg string){
 	switch fg { // Get foreground color
 		case "red":
@@ -32,7 +33,8 @@ func Print(input string, fg string){
 	color.Set(color.FgWhite) // Reset to white
 }
 
-// Convert 24-hour time to 12-hour time
+// convertTime takes string international in 24-hour time (hh:mm) and
+// returns the corresponding 12-hour time (hh:mm AM/PM) as a string
 func convertTime(international string) string{
 	internationalSplit := strings.Split(international, ":")
 	hour, _ := strconv.Atoi(internationalSplit[0])
@@ -43,6 +45,8 @@ func convertTime(international string) string{
 	}
 }
 
+// calcTimeWorked takes strings in and out and returns time
+// worked in the format "X hours & Y minutes"
 func calcTimeWorked(in string, out string) string{
 	// Edge case example: in and out are the same
 	if in == out {
@@ -67,7 +71,8 @@ func calcTimeWorked(in string, out string) string{
 	return strconv.Itoa(hoursWorked) + " hours & " + strconv.Itoa(minutesWorked) + " minutes"
 }
 
-// Append multiple byte slices into one byte slice
+// multiAppend takes a slice of byte slices and
+// concatenates the byte slices into one byte slice
 func multiAppend(slices [][]byte) []byte{
 	var temp []byte
 	for _, slice := range slices { // foreach (I'm a Go noob)
@@ -76,7 +81,7 @@ func multiAppend(slices [][]byte) []byte{
 	return temp[:len(temp)-1] // Remove trailing ","
 }
 
-// Record time in or out
+// punch records today's time in or time out if time in has already been recorded
 func punch(){
 	// Open `hours.db` in cd. Creates the database if it doesn't exist.
 	db, err := bolt.Open("hours.db", 0600, nil)
@@ -129,6 +134,43 @@ func punch(){
 	}
 }
 
+// export writes all logged dates, times in and out, and hours worked to "hours.csv"
+func export(){
+	db, err := bolt.Open("hours.db", 0600, nil) // Open db
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	err = db.Update(func(tx *bolt.Tx) error {
+		logBucket := tx.Bucket([]byte("log")) // Get bucket with logged times
+		if logBucket == nil{
+			return nil
+		}
+
+		// Create output file
+		fo, err := os.Create("hours.csv")
+		if err != nil {
+			return err
+		}
+		defer fo.Close()
+
+		// Iterate over all logged times and write to file
+		if err := logBucket.ForEach(func(k, v []byte) error {
+			fmt.Fprintf(fo, string(multiAppend([][]byte{k, v})) + "\n")
+			return nil
+		});
+		err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		log.Fatal("Error: Could not export hours.")
+	}
+}
+
+// reset deletes the times recorded for in and out only for today
 func reset(){
 	db, err := bolt.Open("hours.db", 0600, nil) // Open db
 	if err != nil {
@@ -170,11 +212,14 @@ func main() {
 	} else if os.Args[1] == "reset"{
 		reset()
 		Print("Punch:punch: in and punch:punch: out times have been reset:recycle: for today!", "cyan")
+	} else if os.Args[1] == "export"{
+		export()
 	} else if os.Args[1] == "help"{
 		Print("","")
 		Print("Usage:information_source::","blue")
 		Print("Punch:punch: in with `punch` and punch:punch: out by calling `punch` again.", "yellow")
-		Print("Also call `punch` after punching:punch: out for the day to see hours worked:chart_with_upwards_trend:.", "magenta")
+		Print("Also call `punch` after punching:punch: out for the day to see hours worked:chart_with_upwards_trend:.", "yellow")
+		Print("Export your hours to a .csv file with `punch export`.", "magenta")
 		Print("Set your in time with `punch in <hh:mm>`.", "green")
 		Print("Set your out time with `punch out <hh:mm>`.", "red")
 		Print("Reset:recycle: your times for the day with `punch reset`.", "cyan")
