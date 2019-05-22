@@ -1,13 +1,13 @@
 # punch👊
 
 ### punch👊 in and out from the command line to keep track of your hours worked with ease!
-
+___
 ### Installation👊
 To start using `punch`, install Go and run `go get`:
 ```sh
 $ go get github.com/AndrewYinLi/punch
 ```
-
+___
 ### Usage👊
 * Punch👊 in with `punch` and punch👊 out by calling `punch` again.
 * Also call `punch` after punching👊 out for the day to see hours worked
