@@ -13,7 +13,7 @@ ___
 
 `punch`
 
-**Export your hours to a .csv file**
+**Export all hours to a .csv file**
 
 `punch export`
 
