@@ -9,9 +9,22 @@ $ go get github.com/AndrewYinLi/punch
 ```
 ___
 ### Usage👊
-* Punch👊 in with `punch` and punch👊 out by calling `punch` again.
-* Also call `punch` after punching👊 out for the day to see hours worked
-* Export your hours to a .csv file with `punch export`.
-* Change your in time manually with `punch in <hh:mm>`.
-* Change your out time manually with `punch out <hh:mm>`.
-* Reset your times for the day with `punch reset`.
+**Punch in/out (punches out if you've already punched in)**
+
+`punch`
+
+**Export your hours to a .csv file**
+
+`punch export`
+
+**Change your in time manually**
+
+`punch in <hh:mm>`
+
+**Change your out time manually**
+
+`punch out <hh:mm>`
+
+**Reset both you in and out time for the day**
+
+`punch reset`
